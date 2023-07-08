@@ -1,10 +1,10 @@
 import pygame
 
-
 class Piece:
     def __init__(self, position, team, board, type):
         self.team = team
         self.type = type
+        self.has_moved = False
 
     def get_possible_moves(self, board):
         pass

@@ -9,7 +9,6 @@ class Advisor(Piece):
         self.position = position
         self.x, self.y = position
         self.image = pygame.image.load('Sprites/' + self.team +'_Advisor.png')
-        self.image = pygame.transform.scale(self.image, (board.width//9 - 20, board.width//9 - 20))
         self.notation = 'A'
 
     def get_possible_moves(self, board):

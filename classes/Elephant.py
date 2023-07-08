@@ -7,7 +7,6 @@ class Elephant(Piece):
         self.position = position
         self.x, self.y = position
         self.image = pygame.image.load('Sprites/' + self.team +'_Elephant.png')
-        self.image = pygame.transform.scale(self.image, (board.width//9 - 20,board.width //9 - 20))
         self.notation = 'E'
     
     def get_possible_moves(self, board):

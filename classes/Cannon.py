@@ -8,7 +8,6 @@ class Cannon(Piece):
         self.position = position
         self.x, self.y = position
         self.image = pygame.image.load('Sprites/' + self.team +'_Cannon.png')
-        self.image = pygame.transform.scale(self.image, (board.width//9 - 20, board.width//9 - 20))
         self.notation = 'C'
     
     def get_possible_moves(self, board):

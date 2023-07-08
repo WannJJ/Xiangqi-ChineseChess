@@ -1,5 +1,3 @@
-import pygame
-
 from classes.Piece import Piece
 from classes.Chariot import Chariot
 from classes.Horse import Horse
@@ -12,15 +10,16 @@ from classes.Elephant import Elephant
 
 
 class Board:
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-        self.tile_width = width //9
+    def __init__(self, gameUI):
+        self.gameUI = gameUI
         self.current_turn = 'r'
-        self.selected_piece = None
-        self.selected_pos = []
+        self.fromPos = None
+        self.lastPos = None
+        self.picked_up_piece = None
         self.possible_moves = []
-
+        
+        
+        
         self.config = [[None for i in range(9)] for i in range(10)]
         self.setup_new_board()
     
@@ -82,11 +81,19 @@ class Board:
         if red_king_pos[1] != black_king_pos[1]:
             return False
         return all(not self.config[x][red_king_pos[1]] for x in range(black_king_pos[0]+1, red_king_pos[0]))
+    
+    def Find_Node(self, pos: tuple, WIDTH):
+        interval = WIDTH // 9
+        y, x = pos
+        rows = y // interval
+        columns = x // interval
+        return int(rows), int(columns)
 
         
     
 
     def handle_click(self, pos: tuple):
+        
         my, mx = pos
         y = my // self.tile_width
         x = mx // self.tile_width
@@ -111,6 +118,58 @@ class Board:
                 self.selected_pos = []
                 self.possible_moves = []
                 print('Can\'t select')
+    
+    def get_game_state(self):
+        return [self.possible_moves, self.fromPos, self.lastPos, self.picked_up_piece]
+                
+    def handle_mouse_down(self, pos):
+        x, y = pos
+        if (x, y) in self.possible_moves and self.fromPos:
+            # performing a valid move
+            row, col = self.fromPos ## coords of the chess piece we picked up
+            self.lastPos = (row, col)
+            chessPiece = self.config[row][col]
+
+            captured = chessPiece.move(self, (x,y))  
+            if captured:
+                self.gameUI.play_sound('capture')
+            else:
+                self.gameUI.play_sound('move')
+            self.fromPos = None
+            self.possible_moves = []
+            self.current_turn = 'b' if self.current_turn=='r' else 'r'
+            
+            #print(convert_to_readable(board))
+        
+        elif(self.config[x][y] and self.config[x][y].team==self.current_turn):     
+            # pick up a piece
+            self.possible_moves = self.config[x][y].get_valid_moves(self)
+            if self.possible_moves:
+                self.fromPos = x,y
+                self.picked_up_piece = self.config[x][y]
+        
+        else:
+                self.fromPos = None
+                self.possible_moves = []
+                print('Can\'t select')
+                
+    def handle_mouse_up(self, pos):
+        x, y = pos
+        if (x, y) in self.possible_moves and self.picked_up_piece and self.fromPos:
+            # performing a valid move
+            row, col = self.fromPos ## coords of the chess piece we picked up
+            self.lastPos = (row, col)
+            
+            captured = self.picked_up_piece.move(self, (x,y))  
+            if captured:
+                self.gameUI.play_sound('capture')
+            else:
+                self.gameUI.play_sound('move')  
+            self.fromPos = None
+            self.possible_moves = []
+            self.current_turn = 'b' if self.current_turn=='r' else 'r'
+            
+        self.picked_up_piece = None
 
     def convert_to_readable(self):
         output = ''
@@ -123,48 +182,7 @@ class Board:
             output += '\n'
         return output
 
-    def update_display(self, win):
-        gap = self.tile_width
-        YELLOW = (204, 204, 0)
-        RED = (200, 100, 100)
-        BLUE = (50, 255, 255)
-        BLACK = (0, 0, 0)
-        win.fill((255,165,0))
-
-        for i in range(10):
-            for j in range(9):
-                
-                if (i, j) in self.possible_moves:
-                    pygame.draw.rect(win, BLUE, (j*gap, i*gap, gap, gap))
-                if self.selected_pos:
-                    pygame.draw.rect(win, YELLOW, (self.selected_pos[1]*gap, self.selected_pos[0]*gap, gap, gap))
-        if self.is_inCheck(self.current_turn):
-            for i in range(10):
-                for j in range(9):
-                    piece = self.config[i][j]
-                    if(piece and piece.team==self.current_turn and piece.type=='k'):
-                        pygame.draw.rect(win, RED, (j*gap, i*gap, gap, gap))
-
-        
-        for i in range(10):
-            for j in range(9):            
-                if self.config[i][j]:
-                    win.blit(self.config[i][j].image, (j*gap, i*gap))
-
-            """
-            The squares are all white so this we need to draw the grey lines that separate all the chess tiles
-            from each other and that is what this function does"""
-            for i in range(10):
-                pygame.draw.line(win, BLACK, (0.5 * gap, (i+0.5) * gap), (8.5 * gap, (i+0.5) * gap))
-            for j in range(9):
-                pygame.draw.line(win, BLACK, ((j+0.5) * gap, 0.5 * gap), ((j+0.5) * gap, 4.5 * gap))
-                pygame.draw.line(win, BLACK, ((j+0.5) * gap, 5.5 * gap), ((j+0.5) * gap, 9.5 * gap))
-            pygame.draw.line(win, BLACK, (3.5 * gap, 0.5 * gap), (5.5 * gap, 2.5 * gap))
-            pygame.draw.line(win, BLACK, (5.5 * gap, 0.5 * gap), (3.5 * gap, 2.5 * gap))
-            pygame.draw.line(win, BLACK, (3.5 * gap, 9.5 * gap), (5.5 * gap, 7.5 * gap))
-            pygame.draw.line(win, BLACK, (5.5 * gap, 9.5 * gap), (3.5 * gap, 7.5 * gap))
-
-
+    
 
 
 

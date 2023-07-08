@@ -7,7 +7,6 @@ class Soldier(Piece):
         self.position = position
         self.x, self.y = position
         self.image = pygame.image.load('Sprites/' + self.team + '_Soldier.png')
-        self.image = pygame.transform.scale(self.image, (board.width//9 - 20, board.width//9 - 20))
         self.notation = 'S'
 
 
